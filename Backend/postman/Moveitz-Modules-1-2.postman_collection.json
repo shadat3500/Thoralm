@@ -1,0 +1,389 @@
+{
+  "info": {
+    "name": "Moveitz API — Modules 1 & 2",
+    "description": "Auth + users (module 1) and profiles + onboarding + files (module 2).\n\nBase path: {{baseUrl}}  (default http://localhost:3000/v1)\n\nFlow:\n1. Register Client or Register Trainer — tokens are saved automatically.\n2. Upload Avatar (pick a local image), then Patch onboarding.\n3. Complete onboarding.\n\nForgot-password returns resetToken only in non-production.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:3000/v1" },
+    { "key": "accessToken", "value": "" },
+    { "key": "refreshToken", "value": "" },
+    { "key": "password", "value": "Password123!" },
+    { "key": "email", "value": "" },
+    { "key": "userId", "value": "" },
+    { "key": "resetToken", "value": "" },
+    { "key": "avatarUrl", "value": "" },
+    { "key": "certUrl", "value": "" }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET health",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Register Client",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  pm.collectionVariables.set('userId', json.user.id);",
+                  "  pm.collectionVariables.set('email', json.user.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Amina Client\",\n  \"email\": \"client.{{$timestamp}}@Moveitz.test\",\n  \"phone\": \"+8801711111111\",\n  \"password\": \"{{password}}\",\n  \"role\": \"CLIENT\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Register Trainer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  pm.collectionVariables.set('userId', json.user.id);",
+                  "  pm.collectionVariables.set('email', json.user.email);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Karim Trainer\",\n  \"email\": \"trainer.{{$timestamp}}@Moveitz.test\",\n  \"phone\": \"+8801722222222\",\n  \"password\": \"{{password}}\",\n  \"role\": \"TRAINER\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "  pm.collectionVariables.set('userId', json.user.id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Refresh",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.accessToken) {",
+                  "  pm.collectionVariables.set('accessToken', json.accessToken);",
+                  "  pm.collectionVariables.set('refreshToken', json.refreshToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/refresh"
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/logout"
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.resetToken) {",
+                  "  pm.collectionVariables.set('resetToken', json.resetToken);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{email}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/forgot-password"
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"{{resetToken}}\",\n  \"password\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/auth/reset-password"
+          }
+        }
+      ]
+    },
+    {
+      "name": "1. Me",
+      "item": [
+        {
+          "name": "GET me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/me"
+          }
+        },
+        {
+          "name": "PATCH me",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fullName\": \"Amina Updated\",\n  \"phone\": \"+8801733333333\",\n  \"avatarUrl\": \"{{avatarUrl}}\"\n}"
+            },
+            "url": "{{baseUrl}}/me"
+          }
+        },
+        {
+          "name": "PATCH me password",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"{{password}}\",\n  \"newPassword\": \"{{password}}\"\n}"
+            },
+            "url": "{{baseUrl}}/me/password"
+          }
+        },
+        {
+          "name": "POST me device",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pushToken\": \"ExponentPushToken[dev-device-token-001]\",\n  \"platform\": \"ANDROID\"\n}"
+            },
+            "url": "{{baseUrl}}/me/device"
+          }
+        },
+        {
+          "name": "DELETE me (soft delete)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/me",
+            "description": "Destructive. Soft-deletes the current user and revokes refresh tokens."
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Files",
+      "item": [
+        {
+          "name": "Upload Avatar",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.url) {",
+                  "  pm.collectionVariables.set('avatarUrl', json.url);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "kind", "value": "AVATAR", "type": "text" },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Pick a jpg/png/webp in Postman before sending."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/files"
+          }
+        },
+        {
+          "name": "Upload Certification",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.url) {",
+                  "  pm.collectionVariables.set('certUrl', json.url);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "kind", "value": "CERT", "type": "text" },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": [],
+                  "description": "Pick an image or PDF in Postman before sending."
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/files"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Onboarding",
+      "item": [
+        {
+          "name": "GET onboarding",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/onboarding"
+          }
+        },
+        {
+          "name": "PATCH onboarding client",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"step\": 13,\n  \"avatarUrl\": \"{{avatarUrl}}\",\n  \"gender\": \"FEMALE\",\n  \"age\": 24,\n  \"weightKg\": 62.5,\n  \"heightCm\": 165,\n  \"goals\": [\"LOSE_WEIGHT\", \"GET_STRONGER\"],\n  \"experienceLevel\": \"BEGINNER\",\n  \"trainLocations\": [\"GYM\", \"HOME\"],\n  \"frequency\": \"TIMES_3_4_WEEK\",\n  \"coachStyle\": \"MOTIVATING_ENERGETIC\",\n  \"specialNeeds\": [],\n  \"preferredLanguage\": \"EN\",\n  \"trainerGenderPref\": \"NO_PREFERENCE\"\n}"
+            },
+            "url": "{{baseUrl}}/onboarding/client"
+          }
+        },
+        {
+          "name": "PATCH onboarding trainer",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"step\": 10,\n  \"avatarUrl\": \"{{avatarUrl}}\",\n  \"gender\": \"MALE\",\n  \"headline\": \"Strength coach in Dhaka\",\n  \"bio\": \"5 years coaching hypertrophy and fat loss.\",\n  \"specializations\": [\"WEIGHT_LOSS\", \"MUSCLE_BUILDING\", \"STRENGTH\"],\n  \"experienceBand\": \"Y2_5\",\n  \"trainLocations\": [\"GYM\", \"ONLINE\"],\n  \"sessionsPerWeek\": \"S6_10\",\n  \"rateBand\": \"R50_100\",\n  \"coachStyle\": \"MOTIVATING_ENERGETIC\",\n  \"languages\": [\"EN\"],\n  \"certifications\": [\n    {\n      \"fileUrl\": \"{{certUrl}}\",\n      \"title\": \"NASM CPT\"\n    }\n  ]\n}"
+            },
+            "url": "{{baseUrl}}/onboarding/trainer"
+          }
+        },
+        {
+          "name": "POST onboarding complete",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/onboarding/complete"
+          }
+        }
+      ]
+    }
+  ]
+}
