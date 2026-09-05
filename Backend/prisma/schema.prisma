@@ -1,0 +1,569 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  CLIENT
+  TRAINER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  DELETED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  NON_BINARY
+  PREFER_NOT_TO_SAY
+}
+
+enum TrainerGenderPref {
+  MALE
+  FEMALE
+  NO_PREFERENCE
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum Goal {
+  LOSE_WEIGHT
+  GAIN_MUSCLE
+  GET_STRONGER
+  FLEXIBILITY
+  GENERAL_HEALTH
+}
+
+enum TrainLocation {
+  GYM
+  HOME
+  CLIENT_HOME
+  OUTDOOR
+  ONLINE
+}
+
+enum Frequency {
+  TIMES_1_2_WEEK
+  TIMES_3_4_WEEK
+  TIMES_5_PLUS_WEEK
+}
+
+enum CoachStyle {
+  MOTIVATING_ENERGETIC
+  TECHNICAL_PRECISE
+  PROFESSIONAL_DISCIPLINED
+  SOCIAL_FUN
+  CALM_EDUCATIONAL
+  STRUCTURED
+}
+
+enum SpecialNeed {
+  INJURY_REHAB
+  PREGNANCY_POST
+  SENIOR
+  NONE
+}
+
+enum Language {
+  EN
+  SV
+  OTHER
+}
+
+enum Specialization {
+  WEIGHT_LOSS
+  MUSCLE_BUILDING
+  STRENGTH
+  SENIORS
+  SPORT_PREP
+  GENERAL_HEALTH
+  PRENATAL
+  POSTNATAL
+  CORE
+  RECOVERY
+  MOBILITY
+  NUTRITION
+}
+
+enum ExperienceBand {
+  UNDER_1
+  Y1_2
+  Y2_5
+  Y5_10
+  OVER_10
+}
+
+enum SessionsPerWeek {
+  S1_5
+  S6_10
+  S11_15
+  S16_PLUS
+}
+
+enum RateBand {
+  UNDER_50
+  R50_100
+  R100_150
+  OVER_150
+}
+
+enum PackageType {
+  PER_SESSION
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum ServiceType {
+  IN_GYM
+  ONLINE
+  CLIENT_HOME
+}
+
+enum SlotStatus {
+  OPEN
+  HELD
+  BOOKED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING_ACCEPTANCE
+  CONFIRMED
+  DECLINED
+  CANCELLED
+  COMPLETED
+  NO_SHOW
+}
+
+enum RequestStatus {
+  NEW
+  ACCEPTED
+  DECLINED
+  ARCHIVED
+}
+
+enum RequestSource {
+  MATCH
+  PROFILE
+  RENEW
+}
+
+enum PaymentStatus {
+  REQUIRES_CAPTURE
+  CAPTURED
+  CANCELLED
+  REFUNDED
+}
+
+enum LedgerType {
+  EARNING
+  FEE
+  WITHDRAWAL
+  REFUND
+  ADJUSTMENT
+}
+
+enum LedgerStatus {
+  PENDING
+  AVAILABLE
+  PAID
+  FAILED
+}
+
+enum CertStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  SYSTEM
+}
+
+enum NotificationType {
+  BOOKING_REQUEST
+  BOOKING_CONFIRMED
+  BOOKING_DECLINED
+  BOOKING_CANCELLED
+  NEW_MESSAGE
+  NEW_REVIEW
+  PAYOUT
+  SYSTEM
+}
+
+enum FileKind {
+  AVATAR
+  GALLERY
+  CERT
+  CHAT
+}
+
+enum Platform {
+  IOS
+  ANDROID
+}
+
+model User {
+  id                    String     @id @default(cuid())
+  role                  Role
+  email                 String     @unique
+  phone                 String?
+  passwordHash          String
+  fullName              String
+  avatarUrl             String?
+  emailVerifiedAt       DateTime?
+  onboardingStep        Int        @default(0)
+  onboardingCompletedAt DateTime?
+  status                UserStatus @default(ACTIVE)
+  lastSeenAt            DateTime?
+  createdAt             DateTime   @default(now())
+  updatedAt             DateTime   @updatedAt
+
+  clientProfile  ClientProfile?
+  trainerProfile TrainerProfile?
+  wallet         Wallet?
+  refreshTokens  RefreshToken[]
+  devices        Device[]
+  notifications  Notification[]
+
+  clientRequestsSent     ClientRequest[] @relation("RequestClient")
+  clientRequestsReceived ClientRequest[] @relation("RequestTrainer")
+  bookingsAsClient       Booking[]       @relation("BookingClient")
+  bookingsAsTrainer      Booking[]       @relation("BookingTrainer")
+  reviewsAuthored        Review[]        @relation("ReviewAuthor")
+  reviewsReceived        Review[]        @relation("ReviewTarget")
+  favorites              Favorite[]      @relation("FavoriteClient")
+  favoritedBy            Favorite[]      @relation("FavoriteTrainer")
+  passedTrainers         PassedTrainer[]
+  conversationParts      ConversationParticipant[]
+  messagesSent           Message[]
+  blocksMade             Block[]         @relation("Blocker")
+  blocksReceived         Block[]         @relation("Blocked")
+  reportsMade            Report[]        @relation("Reporter")
+  reportsReceived        Report[]        @relation("ReportTarget")
+  passwordResetTokens    PasswordResetToken[]
+}
+
+model ClientProfile {
+  userId             String             @id
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gender             Gender?
+  age                Int?
+  weightKg           Decimal?           @db.Decimal(5, 2)
+  heightCm           Int?
+  experienceLevel    ExperienceLevel?
+  frequency          Frequency?
+  coachStyle         CoachStyle?
+  preferredLanguage  Language?
+  trainerGenderPref  TrainerGenderPref?
+  goals              Goal[]
+  trainLocations     TrainLocation[]
+  specialNeeds       SpecialNeed[]
+  addressText        String?
+  lat                Decimal?           @db.Decimal(9, 6)
+  lng                Decimal?           @db.Decimal(9, 6)
+}
+
+model TrainerProfile {
+  userId           String           @id
+  user             User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  gender           Gender?
+  headline         String?
+  bio              String?
+  experienceBand   ExperienceBand?
+  sessionsPerWeek  SessionsPerWeek?
+  rateBand         RateBand?
+  baseRateCents    Int?
+  coachStyle       CoachStyle?
+  languages        Language[]
+  specializations  Specialization[]
+  trainLocations   TrainLocation[]
+  avgRating        Decimal          @default(0) @db.Decimal(2, 1)
+  reviewCount      Int              @default(0)
+  sessionCount     Int              @default(0)
+  clientCount      Int              @default(0)
+  addressText      String?
+  lat              Decimal?         @db.Decimal(9, 6)
+  lng              Decimal?         @db.Decimal(9, 6)
+
+  certifications Certification[]
+  photos         TrainerPhoto[]
+  packages       Package[]
+  slots          AvailabilitySlot[]
+}
+
+model Certification {
+  id        String     @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+  fileUrl   String
+  title     String?
+  status    CertStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+}
+
+model TrainerPhoto {
+  id        String         @id @default(cuid())
+  trainerId String
+  trainer   TrainerProfile @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+  url       String
+  sortOrder Int            @default(0)
+}
+
+model Package {
+  id                   String      @id @default(cuid())
+  trainerId            String
+  trainer              TrainerProfile @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+  type                 PackageType
+  title                String
+  sessionCount         Int         @default(1)
+  pricePerSessionCents Int
+  isActive             Boolean     @default(true)
+  createdAt            DateTime    @default(now())
+  slots                AvailabilitySlot[]
+  bookings             Booking[]
+}
+
+model AvailabilitySlot {
+  id           String         @id @default(cuid())
+  trainerId    String
+  trainer      TrainerProfile @relation(fields: [trainerId], references: [userId], onDelete: Cascade)
+  packageId    String?
+  package      Package?       @relation(fields: [packageId], references: [id])
+  startsAt     DateTime
+  endsAt       DateTime
+  serviceType  ServiceType
+  locationText String?
+  status       SlotStatus     @default(OPEN)
+  spots        Int            @default(1)
+  heldUntil    DateTime?
+  createdAt    DateTime       @default(now())
+  booking      Booking?
+
+  @@index([trainerId, startsAt])
+  @@index([status, startsAt])
+}
+
+model ClientRequest {
+  id          String        @id @default(cuid())
+  clientId    String
+  trainerId   String
+  client      User          @relation("RequestClient", fields: [clientId], references: [id])
+  trainer     User          @relation("RequestTrainer", fields: [trainerId], references: [id])
+  source      RequestSource @default(PROFILE)
+  status      RequestStatus @default(NEW)
+  note        String?
+  createdAt   DateTime      @default(now())
+  respondedAt DateTime?
+
+  @@index([trainerId, status])
+}
+
+model Booking {
+  id               String        @id @default(cuid())
+  clientId         String
+  trainerId        String
+  slotId           String        @unique
+  packageId        String?
+  client           User          @relation("BookingClient", fields: [clientId], references: [id])
+  trainer          User          @relation("BookingTrainer", fields: [trainerId], references: [id])
+  slot             AvailabilitySlot @relation(fields: [slotId], references: [id])
+  package          Package?      @relation(fields: [packageId], references: [id])
+  status           BookingStatus @default(PENDING_ACCEPTANCE)
+  locationText     String?
+  startsAt         DateTime
+  endsAt           DateTime
+  clientPayCents   Int
+  trainerEarnCents Int
+  platformFeeCents Int
+  cancelReason     String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  review           Review?
+  payment          Payment?
+
+  @@index([clientId, status])
+  @@index([trainerId, status])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  bookingId String   @unique
+  booking   Booking  @relation(fields: [bookingId], references: [id])
+  authorId  String
+  targetId  String
+  author    User     @relation("ReviewAuthor", fields: [authorId], references: [id])
+  target    User     @relation("ReviewTarget", fields: [targetId], references: [id])
+  rating    Int
+  body      String?
+  createdAt DateTime @default(now())
+}
+
+model Favorite {
+  clientId  String
+  trainerId String
+  client    User     @relation("FavoriteClient", fields: [clientId], references: [id])
+  trainer   User     @relation("FavoriteTrainer", fields: [trainerId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([clientId, trainerId])
+}
+
+model PassedTrainer {
+  clientId  String
+  trainerId String
+  client    User     @relation(fields: [clientId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([clientId, trainerId])
+}
+
+model Conversation {
+  id            String                     @id @default(cuid())
+  createdAt     DateTime                   @default(now())
+  lastMessageAt DateTime?
+  participants  ConversationParticipant[]
+  messages      Message[]
+}
+
+model ConversationParticipant {
+  conversationId String
+  userId         String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id])
+  unreadCount    Int          @default(0)
+  mutedUntil     DateTime?
+  lastReadAt     DateTime?
+
+  @@id([conversationId, userId])
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  senderId       String
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+  type           MessageType  @default(TEXT)
+  body           String?
+  mediaUrl       String?
+  createdAt      DateTime     @default(now())
+  deletedAt      DateTime?
+
+  @@index([conversationId, createdAt])
+}
+
+model Block {
+  blockerId String
+  blockedId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id])
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id])
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+}
+
+model Report {
+  id         String   @id @default(cuid())
+  reporterId String
+  targetId   String
+  reporter   User     @relation("Reporter", fields: [reporterId], references: [id])
+  target     User     @relation("ReportTarget", fields: [targetId], references: [id])
+  reason     String
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+  createdAt DateTime         @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model Wallet {
+  userId         String        @id
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  availableCents Int           @default(0)
+  pendingCents   Int           @default(0)
+  entries        LedgerEntry[]
+}
+
+model LedgerEntry {
+  id        String       @id @default(cuid())
+  walletId  String
+  wallet    Wallet       @relation(fields: [walletId], references: [userId], onDelete: Cascade)
+  bookingId String?
+  type      LedgerType
+  amountCents Int
+  status    LedgerStatus @default(PENDING)
+  createdAt DateTime     @default(now())
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  bookingId   String        @unique
+  booking     Booking       @relation(fields: [bookingId], references: [id])
+  provider    String        @default("STRIPE")
+  providerRef String?
+  amountCents Int
+  status      PaymentStatus @default(REQUIRES_CAPTURE)
+  createdAt   DateTime      @default(now())
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hashedToken String
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  userAgent  String?
+  createdAt  DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  hashedToken String    @unique
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+}
+
+model Device {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pushToken String
+  platform  Platform
+  createdAt DateTime @default(now())
+
+  @@unique([userId, pushToken])
+}
